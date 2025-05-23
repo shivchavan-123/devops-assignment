@@ -3,7 +3,14 @@ provider "aws" {
 
 }
 
+
 terraform {
+    backend "s3" {
+    bucket         = "shivdevopsassignmentdemo"     
+    key            = "dev/terraform.tfstate"    
+    region         = "us-east-1"                
+    encrypt        = true
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
