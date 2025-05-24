@@ -20,7 +20,8 @@ variable "ingress_rules" {
     from_port   = number
     to_port     = number
     protocol    = string
-    cidr_blocks = list(string)
+    cidr_blocks     = optional(list(string), [])
+    security_groups = optional(list(string), [])
   }))
   default = []
 }
