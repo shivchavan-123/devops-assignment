@@ -155,7 +155,7 @@ module "ecs_sg" {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
-      cidr_blocks = [module.alb_sg.security_group_id] # OR use security group reference if needed
+      cidr_blocks = ["0.0.0.0/0"] # OR use security group reference if needed
     }
   ]
 
