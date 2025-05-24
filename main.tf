@@ -36,7 +36,7 @@ module "ecs" {
 
   cluster_name      = "shiv-cluster"
   app_name          = "hello-app"
-  image_url         = "222634373323.dkr.ecr.us-east-1.amazonaws.com/hello-app:latest"
+  image_url         = "222634373323.dkr.ecr.us-east-1.amazonaws.com/shivdemorepo:latest"
   cpu               = "256"
   memory            = "512"
   container_port    = 80
