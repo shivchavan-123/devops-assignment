@@ -55,7 +55,7 @@ module "alb" {
 
   alb_name             = "shiv-alb"
   internal             = false
-  security_group_ids   = [module.app_security_group.security_group_id]
+  security_group_ids   = [module.alb_sg.security_group_id]
   subnet_ids           = module.vpc.public_subnet_ids
 
   target_group_name    = "shiv-tg"
