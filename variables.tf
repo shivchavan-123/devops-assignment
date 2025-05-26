@@ -9,7 +9,7 @@ variable "environment" {
   default     = "Development"
 }
 
-variable "project_name" {
+variable "project" {
   description = "Project name"
   type        = string
   default     = "DevOpsAssignment"

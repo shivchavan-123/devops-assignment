@@ -3,6 +3,11 @@ variable "project" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment name (Development, Testing, Staging, Production)"
+  type        = string
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
@@ -22,9 +27,4 @@ variable "private_subnet_cidrs" {
 variable "azs" {
   description = "List of availability zones"
   type        = list(string)
-}
-
-variable "environment" {
-  description = "Environment name (Development, Testing, Staging, Production)"
-  type        = string
 }

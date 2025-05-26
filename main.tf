@@ -1,8 +1,6 @@
 provider "aws" {
   region = var.aws_region
-
 }
-
 
 terraform {
     backend "s3" {
@@ -19,18 +17,9 @@ terraform {
   }
 }
 
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "Development"
-}
-
-variable "project_name" {
-  description = "Project name"
-  type        = string
-  default     = "DevOpsAssignment"
-}
+# Remove these variable declarations from main.tf since they're in variables.tf
+# variable "environment" { ... }  <- DELETE THIS
+# variable "project" { ... } <- DELETE THIS
 
 # Add CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "ecs_logs" {
@@ -39,21 +28,20 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
 
   tags = {
     Environment = var.environment
-    Project     = var.project_name
+    Project     = var.project
   }
 }
 
 module "vpc" {
   source = "./modules/network"
 
-  project              = var.project_name
+  project              = var.project
   environment          = var.environment
   vpc_cidr             = "10.0.0.0/16"
   public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
   azs                  = ["us-east-1a", "us-east-1b"]
 }
-
 
 module "ecs" {
   source = "./modules/ecs"
@@ -66,8 +54,7 @@ module "ecs" {
   container_port    = 80
   desired_count     = 1
   environment       = var.environment
-  project           = var.project_name
-
+  project           = var.project
   private_subnets   = module.vpc.private_subnet_ids
   security_group_ids = [module.ecs_sg.security_group_id]
 
@@ -93,11 +80,9 @@ module "alb" {
   vpc_id               = module.vpc.vpc_id
   tags = {
     Environment = var.environment
-    Project     = var.project_name
+    Project     = var.project
   }
 }
-
-
 
 module "app_security_group" {
   source      = "./modules/security_group"
@@ -131,10 +116,10 @@ module "app_security_group" {
 
   tags = {
     Name        = "AppSecurityGroup"
-    Environment = "dev"
+    Environment = var.environment
+    Project     = var.project
   }
 }
-
 
 module "alb_sg" {
   source      = "./modules/security_group"
@@ -167,10 +152,11 @@ module "alb_sg" {
   ]
 
   tags = {
-    Name = "ALB-SG"
+    Name        = "ALB-SG"
+    Environment = var.environment
+    Project     = var.project
   }
 }
-
 
 module "ecs_sg" {
   source      = "./modules/security_group"
@@ -180,10 +166,11 @@ module "ecs_sg" {
 
   ingress_rules = [
     {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      security_group = [module.alb_sg.security_group_id]
+      from_port       = 80
+      to_port         = 80
+      protocol        = "tcp"
+      cidr_blocks     = []
+      security_groups = [module.alb_sg.security_group_id]
     }
   ]
 
@@ -197,7 +184,8 @@ module "ecs_sg" {
   ]
 
   tags = {
-    Name = "ECS-SG"
+    Name        = "ECS-SG"
+    Environment = var.environment
+    Project     = var.project
   }
 }
-
