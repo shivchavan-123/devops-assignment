@@ -61,3 +61,13 @@ variable "region" {
   type        = string
   description = "AWS region"
 }
+
+variable "environment" {
+  type        = string
+  description = "Environment name (Development, Testing, Staging, Production)"
+}
+
+variable "project" {
+  type        = string
+  description = "Project name or identifier"
+}

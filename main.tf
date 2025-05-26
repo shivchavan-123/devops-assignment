@@ -20,10 +20,34 @@ terraform {
 }
 
 
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "Development"
+}
+
+variable "project_name" {
+  description = "Project name"
+  type        = string
+  default     = "DevOpsAssignment"
+}
+
+# Add CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = "/ecs/hello-app"
+  retention_in_days = 7
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
 module "vpc" {
   source = "./modules/network"
 
-  project              = "devops-assignment"
+  project              = var.project_name
+  environment          = var.environment
   vpc_cidr             = "10.0.0.0/16"
   public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
@@ -41,6 +65,8 @@ module "ecs" {
   memory            = "512"
   container_port    = 80
   desired_count     = 1
+  environment       = var.environment
+  project           = var.project_name
 
   private_subnets   = module.vpc.private_subnet_ids
   security_group_ids = [module.ecs_sg.security_group_id]
@@ -48,6 +74,8 @@ module "ecs" {
   target_group_arn  = module.alb.target_group_arn
   log_group         = "/ecs/hello-app"
   region            = "us-east-1"
+
+  depends_on = [aws_cloudwatch_log_group.ecs_logs]
 }
 
 module "alb" {
@@ -64,8 +92,8 @@ module "alb" {
   health_check_path    = "/healthz"
   vpc_id               = module.vpc.vpc_id
   tags = {
-    Environment = "prod"
-    Project     = "DevOpsAssignment"
+    Environment = var.environment
+    Project     = var.project_name
   }
 }
 

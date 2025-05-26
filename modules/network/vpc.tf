@@ -1,11 +1,12 @@
-
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.project}-vpc"
+    Name        = "${var.project}-vpc"
+    Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -13,7 +14,9 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.this.id
 
   tags = {
-    Name = "${var.project}-igw"
+    Name        = "${var.project}-igw"
+    Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -25,7 +28,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.project}-public-${count.index}"
+    Name        = "${var.project}-public-${count.index}"
+    Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -36,7 +41,9 @@ resource "aws_subnet" "private" {
   availability_zone = element(var.azs, count.index)
 
   tags = {
-    Name = "${var.project}-private-${count.index}"
+    Name        = "${var.project}-private-${count.index}"
+    Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -45,7 +52,9 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "${var.project}-nat"
+    Name        = "${var.project}-nat"
+    Environment = var.environment
+    Project     = var.project
   }
 
   depends_on = [aws_internet_gateway.igw]
@@ -53,6 +62,12 @@ resource "aws_nat_gateway" "this" {
 
 resource "aws_eip" "nat" {
   domain = "vpc"
+
+  tags = {
+    Name        = "${var.project}-nat-eip"
+    Environment = var.environment
+    Project     = var.project
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -64,7 +79,9 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.project}-public-rt"
+    Name        = "${var.project}-public-rt"
+    Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -83,7 +100,9 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${var.project}-private-rt"
+    Name        = "${var.project}-private-rt"
+    Environment = var.environment
+    Project     = var.project
   }
 }
 

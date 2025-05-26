@@ -1,10 +1,20 @@
 resource "aws_ecs_cluster" "this" {
   name = var.cluster_name
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+  }
 }
 
 resource "aws_iam_role" "task_execution_role" {
   name               = "${var.cluster_name}-ecs-task-execution-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+  }
 }
 
 data "aws_iam_policy_document" "ecs_assume_role" {
@@ -32,7 +42,8 @@ resource "aws_ecs_task_definition" "this" {
   cpu                      = var.cpu
   memory                   = var.memory
   execution_role_arn       = aws_iam_role.task_execution_role.arn
-  container_definitions    = jsonencode([
+
+  container_definitions = jsonencode([
     {
       name      = var.app_name
       image     = var.image_url
@@ -51,6 +62,11 @@ resource "aws_ecs_task_definition" "this" {
       }
     }
   ])
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+  }
 }
 
 resource "aws_ecs_service" "this" {
@@ -70,6 +86,11 @@ resource "aws_ecs_service" "this" {
     target_group_arn = var.target_group_arn
     container_name   = var.app_name
     container_port   = var.container_port
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project
   }
 
   depends_on = [aws_iam_role_policy_attachment.execution_policy]
