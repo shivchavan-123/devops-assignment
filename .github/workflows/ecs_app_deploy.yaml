@@ -1,4 +1,4 @@
-name: CI/CD - Build Docker, Push to ECR, Terraform Deploy
+name: Terraform CI/CD - Deploy Infrastructure
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    name: Build, Push, and Deploy
+    name: Terraform Deploy
     runs-on: ubuntu-latest
 
     env:
