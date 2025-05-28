@@ -48,13 +48,13 @@ module "ecs" {
 
   cluster_name      = "shiv-cluster"
   app_name          = "hello-app"
-  image_url         = "222634373323.dkr.ecr.us-east-1.amazonaws.com/shivdemorepo:latest"
+  IMAGE_URI        = var.IMAGE_URI
   cpu               = "256"
   memory            = "512"
   container_port    = 80
   desired_count     = 1
   environment       = var.environment
-  project           = var.project
+  project       = var.project
   private_subnets   = module.vpc.private_subnet_ids
   security_group_ids = [module.ecs_sg.security_group_id]
 
@@ -189,5 +189,3 @@ module "ecs_sg" {
     Project     = var.project
   }
 }
-
-#justcommit
