@@ -48,7 +48,7 @@ module "ecs" {
 
   cluster_name      = "shiv-cluster"
   app_name          = "hello-app"
-  IMAGE_URI        = var.IMAGE_URI
+  image_uri             = var.image_uri
   cpu               = "256"
   memory            = "512"
   container_port    = 80

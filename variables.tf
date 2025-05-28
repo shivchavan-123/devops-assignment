@@ -15,7 +15,7 @@ variable "project" {
   default     = "DevOpsAssignment"
 }
 
-variable "IMAGE_URI" {
+variable "image_uri" {
   description = "The ECR image URI built from CI pipeline"
   type        = string
 }
