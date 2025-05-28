@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 @app.route("/")
 def home():
     app.logger.info("Home page accessed")
-    return "Hello, World!"
+    return "Hello, World! smile please : )"
 
 @app.route("/healthz")
 def healthz():
