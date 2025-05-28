@@ -46,7 +46,7 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = jsonencode([
     {
       name      = var.app_name
-      image     = var.image_url
+      image     = var.image_uri
       essential = true
       portMappings = [{
         containerPort = var.container_port

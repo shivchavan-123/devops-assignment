@@ -1,17 +1,56 @@
-name: Terraform CI/CD - Deploy Infrastructure
+name: Terraform CI/CD - Build Docker, Push to ECR, Terraform Deploy
 
 on:
   workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
+  ECR_REPOSITORY: shivdemorepo 
 
 jobs:
+  docker-build-and-push:
+    name: Docker Build & Push to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag, and Push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          IMAGE_URI=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}
+
+          echo "Building image: $IMAGE_URI"
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          echo "$IMAGE_URI" > image-uri.txt
+
+      - name: Upload Image URI
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-uri
+          path: image-uri.txt
+
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    outputs:
-      plan-generated: ${{ steps.plan.outcome }}
+    needs: docker-build-and-push
 
     steps:
       - name: Checkout code
@@ -27,14 +66,23 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Download Docker Image URI
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-uri
+
+      - name: Read Image URI
+        run: |
+          IMAGE_URI=$(cat image-uri.txt)
+          echo "Using Docker image: $IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
       - name: Terraform Init
         run: terraform init
-        working-directory: ./
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -out=tfplan
-        working-directory: ./
+        run: terraform plan -out=tfplan -input=false -no-color -var="image_uri=${{ env.IMAGE_URI }}"
 
       - name: Upload tfplan
         uses: actions/upload-artifact@v4
@@ -44,17 +92,16 @@ jobs:
           retention-days: 1
 
   terraform-apply:
-    name: Terraform Apply (Manual Approval Required)
-    needs: terraform-plan
+    name: Terraform Apply (Manual Approval)
     runs-on: ubuntu-latest
-    if: ${{ needs.terraform-plan.result == 'success' }}
+    needs:
+      - terraform-plan
+      - docker-build-and-push
+    if: ${{ needs.terraform-plan.result == 'success' && needs.docker-build-and-push.result == 'success' }}
     environment:
       name: production
-      url: https://console.aws.amazon.com/
-    steps:
-      - name: Wait for approval
-        run: echo "Waiting for manual approval..."
 
+    steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -70,13 +117,22 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./
 
       - name: Download tfplan
         uses: actions/download-artifact@v4
         with:
           name: tfplan
 
+      - name: Download Docker Image URI
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-uri
+
+      - name: Read Image URI
+        run: |
+          IMAGE_URI=$(cat image-uri.txt)
+          echo "Using Docker image: $IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
-        working-directory: ./
+        run: terraform apply -auto-approve -var="image_uri=${{ env.IMAGE_URI }}" tfplan

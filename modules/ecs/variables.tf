@@ -8,7 +8,7 @@ variable "app_name" {
   description = "Name of the application"
 }
 
-variable "image_url" {
+variable "image_uri" {
   type        = string
   description = "Docker image URL (ECR)"
 }
