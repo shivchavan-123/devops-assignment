@@ -1,7 +1,10 @@
 name: Terraform CI/CD - Build Docker, Push to ECR, Terraform Deploy
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
 
 env:
   AWS_REGION: us-east-1
