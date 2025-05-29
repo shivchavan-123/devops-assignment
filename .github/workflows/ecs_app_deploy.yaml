@@ -2,6 +2,16 @@ name: Terraform CI/CD - Build Docker, Push to ECR, Terraform Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
 
 env:
   AWS_REGION: us-east-1
@@ -82,7 +92,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -out=tfplan -input=false -no-color -var="image_uri=${{ env.IMAGE_URI }}"
+        run: terraform plan -var="image_uri=${{ env.IMAGE_URI }}" -var-file="environments/${{ github.event.inputs.environment }}/terraform.tfvars" -out=tfplan
 
       - name: Upload tfplan
         uses: actions/upload-artifact@v4
@@ -98,8 +108,7 @@ jobs:
       - terraform-plan
       - docker-build-and-push
     if: ${{ needs.terraform-plan.result == 'success' && needs.docker-build-and-push.result == 'success' }}
-    environment:
-      name: production
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
       - name: Checkout code
