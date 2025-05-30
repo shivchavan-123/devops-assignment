@@ -35,6 +35,11 @@ resource "aws_iam_role_policy_attachment" "execution_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "secretsmanager_access" {
+  role       = aws_iam_role.task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+}
+
 resource "aws_ecs_task_definition" "this" {
   family                   = "${var.app_name}-task"
   requires_compatibilities = ["FARGATE"]
